@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:snake_app/blanck_pixel.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -29,8 +30,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisCount: rowSize
                 ),
                 itemBuilder: (context, index) {
-                  return Padding(padding: const EdgeInsets.all(2.0),
-                  child: Container(decoration: BoxDecoration (color: Colors.grey[900], borderRadius: BorderRadius.circular(4))) );
+                  return Blanck_pixel();
                 }),
           ),
           Expanded(
