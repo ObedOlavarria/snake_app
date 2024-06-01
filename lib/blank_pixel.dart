@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-class Blanck_pixel extends StatelessWidget {
-  const Blanck_pixel({
-    super.key,
-  });
+class Blankpixel extends StatelessWidget {
+  const Blankpixel({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

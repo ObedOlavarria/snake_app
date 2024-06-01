@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-class Snake_pixel extends StatelessWidget {
-  const Snake_pixel({
-    super.key,
-  });
+class Snakepixel extends StatelessWidget {
+  const Snakepixel({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
