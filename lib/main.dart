@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:snake_app/home_page.dart';
-
-void main() {
+import 'package:cloud_firestore/cloud_firestore.dart';
+Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initiazeApp;
   runApp(const MyApp());
 }
 
@@ -11,9 +13,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-debugShowCheckedModeBanner: false,
-home: const HomePage(),
-theme: ThemeData(brightness: Brightness.dark),
+      debugShowCheckedModeBanner: false,
+      home: const HomePage(),
+      theme: ThemeData(brightness: Brightness.dark),
     );
   }
 }

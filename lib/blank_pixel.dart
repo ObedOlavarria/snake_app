@@ -8,8 +8,11 @@ class Blankpixel extends StatelessWidget {
     return Padding(
         padding: const EdgeInsets.all(2.0),
         child: Container(
-            decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(4))));
+            decoration:BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius: BorderRadius.circular(4)
+        )
+      )
+    );
   }
 }
