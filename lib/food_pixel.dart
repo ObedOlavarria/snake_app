@@ -9,7 +9,7 @@ class FoodPixel extends StatelessWidget {
         padding: const EdgeInsets.all(2.0),
         child: Container(
             decoration: BoxDecoration(
-                color: Color.fromARGB(255, 29, 146, 35),
+                color: Color.fromARGB(255, 174, 14, 189),
                 borderRadius: BorderRadius.circular(4))));
   }
 }

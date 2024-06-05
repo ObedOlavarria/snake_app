@@ -82,7 +82,7 @@ class _HomePageState extends State<HomePage> {
                         newGame();
                       },
                       child: Text('Submit'),
-                      color: Colors.pink,
+                      color: const Color.fromARGB(255, 64, 233, 30),
                     )
                   ],
                 );
