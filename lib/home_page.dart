@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:snake_app/blank_pixel.dart';
 import 'package:snake_app/food_pixel.dart';
+import 'package:snake_app/highscore_tile.dart';
 import 'package:snake_app/snake_pixel.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,31 +19,41 @@ enum snake_Direction { UP, DOWN, LEFT, RIGHT }
 
 class _HomePageState extends State<HomePage> {
   int rowSize = 10;
-  late int totalNumberofSquares = 100;
+  int totalNumberofSquares = 100;
   int currentScore = 0;
   bool gameHasStarted = false;
-  // Inicializa totalNumberofSquares en el initState
+  final _nameController = TextEditingController();
+
+  List<int> snakePos = [0, 1, 2];
+  var currentDirection = snake_Direction.RIGHT;
+  int foodPos = 55;
+
+  List<String> highscoreDocIds = [];
+  late Future<void> getDocIdsFuture;
+
   @override
   void initState() {
     super.initState();
     totalNumberofSquares = rowSize * rowSize;
+    getDocIdsFuture = getDocIds();
   }
 
-  //snake posision
-  List<int> snakePos = [0, 1, 2];
+  Future<void> getDocIds() async {
+    var snapshot = await FirebaseFirestore.instance
+        .collection("highscores")
+        .orderBy("score", descending: true)
+        .limit(10)
+        .get();
 
-//SNAKE DIRECTION
-  var currentDirection = snake_Direction.RIGHT;
-
-  // food snake
-  int foodPos = 55;
-  //
+    setState(() {
+      highscoreDocIds = snapshot.docs.map((doc) => doc.id).toList();
+    });
+  }
 
   void startGame() {
     gameHasStarted = true;
     Timer.periodic(Duration(milliseconds: 200), (timer) {
       setState(() {
-        // keep the snake moving!
         moveSnake();
 
         if (gameOver()) {
@@ -55,8 +67,9 @@ class _HomePageState extends State<HomePage> {
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Your score is: ' + currentScore.toString()),
+                      Text('Your score is: $currentScore'),
                       TextField(
+                        controller: _nameController,
                         decoration: InputDecoration(hintText: 'Enter name'),
                       )
                     ],
@@ -80,9 +93,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void submitScore() {
-    // Implementar lógica para enviar el puntaje
+    var database = FirebaseFirestore.instance;
+
+    database.collection('highscores').add({
+      "name": _nameController.text,
+      "score": currentScore,
+    });
   }
-  void newGame() {
+
+  Future<void> newGame() async {
     setState(() {
       snakePos = [0, 1, 2];
       foodPos = 55;
@@ -90,6 +109,8 @@ class _HomePageState extends State<HomePage> {
       gameHasStarted = false;
       currentScore = 0;
     });
+
+    await getDocIds();
   }
 
   void eatFood() {
@@ -103,7 +124,6 @@ class _HomePageState extends State<HomePage> {
     switch (currentDirection) {
       case snake_Direction.RIGHT:
         {
-          //add a head
           if (snakePos.last % rowSize == 9) {
             snakePos.add(snakePos.last + 1 - rowSize);
           } else {
@@ -113,7 +133,6 @@ class _HomePageState extends State<HomePage> {
         break;
       case snake_Direction.LEFT:
         {
-          //add a head
           if (snakePos.last % rowSize == 0) {
             snakePos.add(snakePos.last - 1 + rowSize);
           } else {
@@ -123,7 +142,6 @@ class _HomePageState extends State<HomePage> {
         break;
       case snake_Direction.UP:
         {
-          //add a head
           if (snakePos.last < rowSize) {
             snakePos.add(snakePos.last - rowSize + totalNumberofSquares);
           } else {
@@ -133,8 +151,7 @@ class _HomePageState extends State<HomePage> {
         break;
       case snake_Direction.DOWN:
         {
-          //add a head
-          if (snakePos.last + rowSize > totalNumberofSquares) {
+          if (snakePos.last + rowSize >= totalNumberofSquares) {
             snakePos.add(snakePos.last + rowSize - totalNumberofSquares);
           } else {
             snakePos.add(snakePos.last + rowSize);
@@ -143,7 +160,7 @@ class _HomePageState extends State<HomePage> {
         break;
       default:
     }
-    // snake comida food
+
     if (snakePos.last == foodPos) {
       eatFood();
     } else {
@@ -151,64 +168,80 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  //game over
-
   bool gameOver() {
     List<int> bodySnake = snakePos.sublist(0, snakePos.length - 1);
-    if (bodySnake.contains(snakePos.last)) {
-      return true;
-    }
-    return false;
+    return bodySnake.contains(snakePos.last);
   }
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                //user current
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('current score'),
-                    Text(
-                      currentScore.toString(),
-                      style: TextStyle(fontSize: 36),
+      body: SizedBox(
+        width: screenWidth > 428 ? 428 : screenWidth,
+        child: Column(
+          children: [
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('current score'),
+                        Text(
+                          currentScore.toString(),
+                          style: TextStyle(fontSize: 36),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-
-                //score
-                Text('highscores..')
-              ],
+                  ),
+                  Expanded(
+                    child: gameHasStarted
+                        ? Container()
+                        : FutureBuilder(
+                            future: getDocIdsFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done) {
+                                return ListView.builder(
+                                  itemCount: highscoreDocIds.length,
+                                  itemBuilder: (context, index) {
+                                    return HighScoreTile(
+                                      documentId: highscoreDocIds[index],
+                                    );
+                                  },
+                                );
+                              } else if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              } else {
+                                return CircularProgressIndicator();
+                              }
+                            },
+                          ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
+            Expanded(
               flex: 3,
               child: GestureDetector(
                 onVerticalDragUpdate: (details) {
-                  if (details.delta.dy > 0 &&
-                      currentDirection != snake_Direction.UP) {
+                  if (details.delta.dy > 0 && currentDirection != snake_Direction.UP) {
                     currentDirection = snake_Direction.DOWN;
-                  } else if (details.delta.dy < 0 &&
-                      currentDirection != snake_Direction.DOWN) {
+                  } else if (details.delta.dy < 0 && currentDirection != snake_Direction.DOWN) {
                     currentDirection = snake_Direction.UP;
                   }
                 },
-                onHorizontalDragUpdate: ((details) {
-                  if (details.delta.dx > 0 &&
-                      currentDirection != snake_Direction.LEFT) {
+                onHorizontalDragUpdate: (details) {
+                  if (details.delta.dx > 0 && currentDirection != snake_Direction.LEFT) {
                     currentDirection = snake_Direction.RIGHT;
-                  } else if (details.delta.dx < 0 &&
-                      currentDirection != snake_Direction.RIGHT) {
+                  } else if (details.delta.dx < 0 && currentDirection != snake_Direction.RIGHT) {
                     currentDirection = snake_Direction.LEFT;
                   }
-                }),
+                },
                 child: GridView.builder(
                   itemCount: totalNumberofSquares,
                   physics: const NeverScrollableScrollPhysics(),
@@ -225,18 +258,21 @@ class _HomePageState extends State<HomePage> {
                     }
                   },
                 ),
-              )),
-          Expanded(
-            child: Container(
-              child: Center(
-                  child: MaterialButton(
-                child: Text('PLAY'),
-                color: gameHasStarted ? Colors.grey : Colors.pink,
-                onPressed: gameHasStarted ? () {} : startGame,
-              )),
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Container(
+                child: Center(
+                  child: MaterialButton(
+                    child: Text('PLAY'),
+                    color: gameHasStarted ? Colors.grey : Colors.pink,
+                    onPressed: gameHasStarted ? () {} : startGame,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
