@@ -265,7 +265,7 @@ class _HomePageState extends State<HomePage> {
                 child: Center(
                   child: MaterialButton(
                     child: Text('PLAY'),
-                    color: gameHasStarted ? Colors.grey : Colors.pink,
+                    color: gameHasStarted ? Colors.grey : Color.fromARGB(255, 19, 233, 0),
                     onPressed: gameHasStarted ? () {} : startGame,
                   ),
                 ),
